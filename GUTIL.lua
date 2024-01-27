@@ -678,24 +678,25 @@ end
 ---@param t table<K, V>
 ---@param foldFunction fun(foldValue: any, nextElement: V): any
 ---@param startAtZero boolean wether the table starts with index 0
-function GUTIL:Fold(t, foldFunction, startAtZero)
-  local foldedValue = nil
-  if #t < 2 and not startAtZero then
-    return t[1]
-  elseif #t < 1 and startAtZero then
-    return t[0]
-  end
-
-  local startIndex = 1
+---@param initialValue any An optional initial value
+function GUTIL:Fold(t, foldFunction, startAtZero, initialValue)
+  local startIndex
   if startAtZero then
     startIndex = 0
+  else
+    startIndex = 1
+  end
+
+  local hasInitialValue = type(initialValue) ~= "nil"
+  local foldedValue
+  if hasInitialValue then
+    foldedValue = initialValue
+  else
+    foldedValue = t[startIndex]
+    startIndex = startIndex + 1
   end
   for index = startIndex, #t, 1 do
-    if foldedValue == nil then
-      foldedValue = foldFunction(t[startIndex], t[startIndex + 1])
-    elseif index < #t then
-      foldedValue = foldFunction(foldedValue, t[index + 1])
-    end
+    foldedValue = foldFunction(foldedValue, t[index])
   end
 
   return foldedValue
