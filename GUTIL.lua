@@ -25,7 +25,7 @@ function Object:extend()
 end
 
 function Object:implement(...)
-  for _, cls in pairs({ ... }) do
+  for _, cls in pairs({ ..., }) do
     for k, v in pairs(cls) do
       if self[k] == nil and type(v) == "function" then
         self[k] = v
@@ -198,7 +198,8 @@ function GUTIL:Map(t, mapFunc, options)
   else
     for k, v in pairs(t) do
       if not v[options.subTable] or type(v[options.subTable]) ~= "table" then
-        print("GUTIL.Map: given options.subTable is not existing or no table: " .. tostring(v[options.subTable]))
+        print("GUTIL.Map: given options.subTable is not existing or no table: " ..
+          tostring(v[options.subTable]))
       else
         for subK, subV in pairs(v[options.subTable]) do
           local mappedValue = mapFunc(subV, subK)
@@ -229,7 +230,8 @@ end
 
 function GUTIL:CreateRegistreeForEvents(events)
   local registree = CreateFrame("Frame", nil)
-  registree:SetScript("OnEvent", function(self, event, ...) self[event](self, ...) end)
+  registree:SetScript("OnEvent",
+    function(self, event, ...) self[event](self, ...) end)
   for _, event in pairs(events) do
     registree:RegisterEvent(event)
   end
@@ -415,7 +417,8 @@ end
 ---@param useColor? boolean -- colors the numbers green if positive and red if negative
 ---@param percentRelativeTo number? if included: will be treated as 100% and a % value in relation to the coppervalue will be added
 ---@param separateThousands? boolean
-function GUTIL:FormatMoney(copperValue, useColor, percentRelativeTo, separateThousands)
+function GUTIL:FormatMoney(copperValue, useColor, percentRelativeTo,
+  separateThousands)
   copperValue = GUTIL:Round(copperValue) -- there is no such thing as decimal coppers (we no fuel station here)
   local absValue = abs(copperValue)
   local minusText = ""
@@ -423,7 +426,8 @@ function GUTIL:FormatMoney(copperValue, useColor, percentRelativeTo, separateTho
   local percentageText = ""
 
   if percentRelativeTo then
-    percentageText = " (" .. GUTIL:GetPercentRelativeTo(copperValue, percentRelativeTo) .. "%)"
+    percentageText = " (" ..
+      GUTIL:GetPercentRelativeTo(copperValue, percentRelativeTo) .. "%)"
   end
 
   if copperValue < 0 then
@@ -432,9 +436,12 @@ function GUTIL:FormatMoney(copperValue, useColor, percentRelativeTo, separateTho
   end
 
   if useColor then
-    return GUTIL:ColorizeText(minusText .. GetMoneyString(absValue, separateThousands) .. percentageText, color)
+    return GUTIL:ColorizeText(
+      minusText .. GetMoneyString(absValue, separateThousands) .. percentageText,
+      color)
   else
-    return minusText .. GetMoneyString(absValue, separateThousands) .. percentageText
+    return minusText ..
+      GetMoneyString(absValue, separateThousands) .. percentageText
   end
 end
 
@@ -555,7 +562,9 @@ function GUTIL:EquipItemByLink(link)
     for slot = 1, C_Container.GetContainerNumSlots(bag) do
       local item = C_Container.GetContainerItemLink(bag, slot)
       if item and item == link then
-        if CursorHasItem() or CursorHasMoney() or CursorHasSpell() then ClearCursor() end
+        if CursorHasItem() or CursorHasMoney() or CursorHasSpell() then
+          ClearCursor()
+        end
         C_Container.PickupContainerItem(bag, slot)
         AutoEquipCursorItem()
         return true
@@ -570,7 +579,8 @@ end
 
 --> GGUI or keep here?
 function GUTIL:GetQualityIconString(qualityID, sizeX, sizeY, offsetX, offsetY)
-  return CreateAtlasMarkup("Professions-Icon-Quality-Tier" .. qualityID, sizeX, sizeY, offsetX, offsetY)
+  return CreateAtlasMarkup("Professions-Icon-Quality-Tier" .. qualityID, sizeX,
+    sizeY, offsetX, offsetY)
 end
 
 --- Counts the number of items that return true for the given function
@@ -678,24 +688,30 @@ end
 ---@param t table<K, V>
 ---@param foldFunction fun(foldValue: any, nextElement: V): any
 ---@param startAtZero boolean wether the table starts with index 0
-function GUTIL:Fold(t, foldFunction, startAtZero)
-  local foldedValue = nil
-  if #t < 2 and not startAtZero then
-    return t[1]
-  elseif #t < 1 and startAtZero then
-    return t[0]
+---@param initialValue any An optional initial value
+function GUTIL:Fold(t, foldFunction, startAtZero, initialValue)
+  local hasInitialValue = type(initialValue) ~= "nil"
+  if not hasInitialValue then
+    if #t < 2 and not startAtZero then
+      return t[1]
+    elseif #t < 1 and startAtZero then
+      return t[0]
+    end
   end
 
   local startIndex = 1
   if startAtZero then
     startIndex = 0
   end
+  local foldedValue
+  if hasInitialValue then
+    foldedValue = initialValue
+  else
+    foldedValue = t[startIndex]
+    startIndex = startIndex + 1
+  end
   for index = startIndex, #t, 1 do
-    if foldedValue == nil then
-      foldedValue = foldFunction(t[startIndex], t[startIndex + 1])
-    elseif index < #t then
-      foldedValue = foldFunction(foldedValue, t[index + 1])
-    end
+    foldedValue = foldFunction(foldedValue, t[index + 1])
   end
 
   return foldedValue
@@ -736,7 +752,7 @@ function GUTIL:ValidateNumberString(str, min, max, allowDecimals)
   if (min and num < min) or (max and num > max) then
     return false -- Outside specified range
   end
-  return true    -- Valid number within range
+  return true -- Valid number within range
 end
 
 ---@param timestampHigher number unix seconds
@@ -776,7 +792,7 @@ end
 ---@return fun(t: table<K, V>): K, V orderedNext
 ---@return K[] keys
 function GUTIL:OrderedPairs(t, compFunc)
-  local keys, kn = { __source = t, __next = 1 }, 1
+  local keys, kn = { __source = t, __next = 1, }, 1
   for k in pairs(t) do
     keys[kn], kn = k, kn + 1
   end
@@ -794,7 +810,8 @@ end
 ---@param finallyCallback? function called after the iteration ends
 ---@param maxIterations? integer maximum number of iterations. Default is nil meaning no maximum
 ---@param maxMS? number maximum time in ms after the iteration is canceled
-function GUTIL:FrameDistributedIteration(t, iterationFunction, finallyCallback, maxIterations, maxMS)
+function GUTIL:FrameDistributedIteration(t, iterationFunction, finallyCallback,
+  maxIterations, maxMS)
   --- map the keys of the table to indexes
   local iterationCounter = 1
   local startMS = GetTime() * 1000
@@ -811,12 +828,14 @@ function GUTIL:FrameDistributedIteration(t, iterationFunction, finallyCallback, 
       return
     end
 
-    local result = iterationFunction(currentIterationKey, currentTableValue, iterationCounter)
+    local result = iterationFunction(currentIterationKey, currentTableValue,
+      iterationCounter)
     local stopIteration = result ~= nil and result == false
     iterationCounter = iterationCounter + 1
     local elapsedMS = (GetTime() * 1000) - startMS
     local secondsReached = maxMS and (maxMS <= elapsedMS)
-    local iterationsReached = maxIterations and (iterationCounter > maxIterations)
+    local iterationsReached = maxIterations and
+      (iterationCounter > maxIterations)
 
     if stopIteration or iterationsReached or secondsReached then
       if finallyCallback then
